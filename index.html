@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>QuickMath — Speed Drill</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0E1419" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+  :root{
+    --bg:#0E1419; --surface:#161E27; --surface2:#1E2832;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+    --text:#EAEFF4; --muted:#8593A0; --faint:#5A6675;
+    --accent:#FFB22C; --accent2:#E89C12;
+    --ok:#34D399; --bad:#FB6F6F;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --r:14px;
+  }
+  [data-theme="light"]{
+    --bg:#EEF1F5; --surface:#FFFFFF; --surface2:#E7ECF1;
+    --line:rgba(16,24,32,.10); --line2:rgba(16,24,32,.18);
+    --text:#11181F; --muted:#566472; --faint:#8A97A4;
+    --accent:#D9850A; --accent2:#B86E06;
+    --ok:#0E9F6E; --bad:#E0484D;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;display:flex;justify-content:center;
+    padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 16px);}
+  .app{width:100%;max-width:480px;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;}
+
+  header#hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 0 14px;}
+  .brand{display:flex;align-items:baseline;gap:9px;}
+  .brand b{font-size:19px;font-weight:650;letter-spacing:-.02em;}
+  .brand span{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:600;}
+  .nav{display:flex;background:var(--surface2);border-radius:11px;padding:3px;}
+  .nav button{border:none;background:none;color:var(--muted);font-family:var(--sans);font-size:13.5px;
+    font-weight:600;padding:7px 15px;border-radius:9px;cursor:pointer;}
+  .nav button.on{background:var(--surface);color:var(--text);}
+  .icobtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+    color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .icobtn:active{transform:scale(.94);}
+
+  .screen{display:none;flex:1;flex-direction:column;animation:fade .22s ease;}
+  .screen.on{display:flex;}
+  @keyframes fade{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+
+  .label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:0 0 11px 2px;}
+  .block{margin-bottom:24px;}
+  .ops{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .op{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);
+    font-family:var(--mono);font-size:30px;color:var(--muted);cursor:pointer;display:flex;align-items:center;
+    justify-content:center;transition:all .14s ease;font-weight:500;}
+  .op:active{transform:scale(.95);}
+  .op.sel{background:var(--accent);color:#1a1205;border-color:var(--accent);font-weight:700;}
+
+  .seg{display:flex;gap:8px;align-items:center;}
+  .seg .t{font-size:13.5px;color:var(--muted);width:104px;flex-shrink:0;}
+  .pill{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:11px 0;
+    text-align:center;font-family:var(--mono);font-size:16px;color:var(--muted);cursor:pointer;transition:all .12s;}
+  .pill:active{transform:scale(.96);}
+  .pill.sel{background:var(--surface2);color:var(--accent);border-color:var(--accent);font-weight:600;}
+  .seg+.seg{margin-top:9px;}
+
+  .field{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 6px 6px 16px;}
+  .field+.field{margin-top:10px;}
+  .field label{font-size:15px;}
+  .field .sub{font-size:12px;color:var(--faint);display:block;}
+  .field input{width:96px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font-family:var(--mono);font-size:20px;text-align:center;padding:10px 8px;outline:none;font-weight:600;}
+  .field input:focus{border-color:var(--accent);}
+
+  .start{margin-top:auto;border:none;background:var(--accent);color:#1a1205;font-family:var(--sans);
+    font-size:17px;font-weight:700;border-radius:var(--r);padding:17px;cursor:pointer;transition:transform .1s,opacity .15s;}
+  .start:active{transform:scale(.98);}
+  .start:disabled{opacity:.4;cursor:not-allowed;}
+  .hint{text-align:center;color:var(--faint);font-size:12.5px;margin:11px 0 2px;min-height:16px;}
+
+  /* GAME */
+  #game{padding-top:0;}
+  .ghead{position:sticky;top:0;z-index:10;background:var(--bg);padding:14px 0 8px;}
+  .gtop{display:flex;justify-content:space-between;align-items:center;}
+  .qcount{font-family:var(--mono);font-size:15px;color:var(--muted);}
+  .qcount b{color:var(--text);font-size:17px;}
+  .clock{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);min-width:60px;text-align:center;}
+  .quit{background:none;border:none;color:var(--faint);font-size:13px;cursor:pointer;padding:6px;}
+  .bars{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
+  .track{height:6px;border-radius:6px;background:var(--surface2);overflow:hidden;}
+  .fill{height:100%;width:0;border-radius:6px;transition:width .25s ease;background:var(--text);}
+  .pacewrap{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
+  .pacelbl{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--muted);}
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;min-height:46vh;}
+  .q{font-family:var(--mono);font-weight:500;text-align:center;line-height:1.1;font-size:clamp(2.4rem,14vw,4.2rem);}
+  .q i{font-style:normal;color:var(--accent);margin:0 .12em;}
+  .ans{width:min(80%,300px);background:var(--surface);border:2px solid var(--line2);border-radius:16px;
+    color:var(--text);font-family:var(--mono);font-size:clamp(1.9rem,9vw,2.7rem);font-weight:600;
+    text-align:center;padding:14px 10px;outline:none;transition:border-color .12s,background .12s;}
+  .ans:focus{border-color:var(--accent);}
+  .ans.good{border-color:var(--ok);background:rgba(52,211,153,.10);}
+  .shake{animation:shk .26s;}
+  @keyframes shk{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+
+  /* RESULT */
+  .result{flex:1;display:flex;flex-direction:column;justify-content:center;padding-top:8px;}
+  .verdict{text-align:center;margin-bottom:22px;}
+  .verdict .big{font-family:var(--mono);font-size:52px;font-weight:700;line-height:1;}
+  .verdict .cap{color:var(--muted);font-size:14px;margin-top:8px;}
+  .pacetag{display:inline-block;margin-top:14px;padding:7px 16px;border-radius:30px;font-size:13.5px;font-weight:600;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px;text-align:center;}
+  .stat .k{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;}
+  .stat .v{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:5px;}
+  .best{text-align:center;font-size:13px;color:var(--muted);margin:4px 0 22px;}
+  .best b{color:var(--accent);}
+  .twobtn{display:flex;gap:10px;margin-top:auto;}
+  .twobtn button{flex:1;border-radius:var(--r);padding:16px;font-size:16px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:transform .1s;}
+  .twobtn button:active{transform:scale(.98);}
+  .again{border:none;background:var(--accent);color:#1a1205;}
+  .edit{border:1px solid var(--line2);background:var(--surface);color:var(--text);}
+
+  /* HISTORY */
+  #history{padding-top:4px;}
+  .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:20px;}
+  .scard{background:var(--surface2);border-radius:var(--r);padding:14px 16px;}
+  .scard .k{font-size:12px;color:var(--muted);}
+  .scard .v{font-family:var(--mono);font-size:23px;font-weight:600;margin-top:3px;}
+  .chartbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 8px;margin-bottom:14px;}
+  .chartbox .ch{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .chartbox .ch .name{font-size:13.5px;font-weight:600;}
+  .chartbox .ch .now{font-family:var(--mono);font-size:13px;color:var(--muted);}
+  .chartbox svg{width:100%;height:auto;display:block;}
+  .recent{margin-top:6px;}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .row .l .t{font-family:var(--mono);font-size:14px;}
+  .row .l .d{font-size:12px;color:var(--faint);margin-top:2px;}
+  .row .r{text-align:right;font-family:var(--mono);font-size:13px;}
+  .row .r .sp{color:var(--accent);font-weight:600;}
+  .row .r .ac{color:var(--muted);}
+  .empty{text-align:center;color:var(--faint);font-size:14px;padding:48px 20px;}
+  .clear{margin-top:16px;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--bad);
+    border-radius:var(--r);padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+</style>
+</head>
+<body data-theme="dark">
+<div class="app">
+
+  <header id="hdr">
+    <div class="brand"><b>QuickMath</b><span>Drill</span></div>
+    <div class="nav" id="nav">
+      <button data-go="setup" class="on">Drill</button>
+      <button data-go="history">History</button>
+    </div>
+    <button class="icobtn" id="theme" aria-label="Toggle theme">☾</button>
+  </header>
+
+  <!-- SETUP -->
+  <section class="screen on" id="setup">
+    <div class="block">
+      <p class="label">Operations</p>
+      <div class="ops" id="ops">
+        <button class="op sel" data-op="add">+</button>
+        <button class="op" data-op="sub">−</button>
+        <button class="op" data-op="mul">×</button>
+        <button class="op" data-op="div">÷</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="label">Number size</p>
+      <div class="seg" id="segA"><span class="t">First number</span>
+        <div class="pill" data-d="1">1‑digit</div>
+        <div class="pill sel" data-d="2">2‑digit</div>
+        <div class="pill" data-d="3">3‑digit</div>
+      </div>
+      <div class="seg" id="segB"><span class="t">Second number</span>
+        <div class="pill" data-d="1">1‑digit</div>
+        <div class="pill sel" data-d="2">2‑digit</div>
+        <div class="pill" data-d="3">3‑digit</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="label">Round</p>
+      <div class="field">
+        <div><label>Questions</label><span class="sub">how many to solve</span></div>
+        <input id="numQ" type="number" inputmode="numeric" value="20" min="1" max="300" />
+      </div>
+      <div class="field">
+        <div><label>Target time</label><span class="sub">minutes to beat</span></div>
+        <input id="numT" type="number" inputmode="decimal" value="3" min="0.5" max="120" step="0.5" />
+      </div>
+    </div>
+
+    <button class="start" id="startBtn">Start drill</button>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="game">
+    <div class="ghead">
+      <div class="gtop">
+        <span class="qcount"><b id="qNow">1</b> / <span id="qTot">20</span></span>
+        <span class="clock" id="clock">0:00</span>
+        <button class="quit" id="quit">Quit</button>
+      </div>
+      <div class="bars">
+        <div class="track"><div class="fill" id="qFill"></div></div>
+        <div class="track"><div class="fill" id="tFill"></div></div>
+        <div class="pacewrap">
+          <span class="pacelbl" id="paceLbl">Go</span>
+          <span class="pacelbl" id="targetLbl"></span>
+        </div>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="q" id="q">— + —</div>
+      <input class="ans" id="ans" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="result">
+    <div class="result">
+      <div class="verdict">
+        <div class="big" id="rTime">0:00</div>
+        <div class="cap" id="rCap">20 questions</div>
+        <div class="pacetag" id="rTag"></div>
+      </div>
+      <div class="grid3">
+        <div class="stat"><div class="k">Avg / q</div><div class="v" id="rAvg">—</div></div>
+        <div class="stat"><div class="k">Accuracy</div><div class="v" id="rAcc">—</div></div>
+        <div class="stat"><div class="k">vs target</div><div class="v" id="rDelta">—</div></div>
+      </div>
+      <p class="best" id="rBest"></p>
+      <div class="twobtn">
+        <button class="edit" id="editBtn">Change setup</button>
+        <button class="again" id="againBtn">Run again</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="screen" id="history">
+    <div id="histEmpty" class="empty">No rounds yet. Finish a drill and your speed and accuracy will plot here.</div>
+    <div id="histBody" style="display:none;">
+      <div class="summary">
+        <div class="scard"><div class="k">Rounds</div><div class="v" id="hRounds">0</div></div>
+        <div class="scard"><div class="k">Questions solved</div><div class="v" id="hQ">0</div></div>
+        <div class="scard"><div class="k">Best speed</div><div class="v" id="hBest">—</div></div>
+        <div class="scard"><div class="k">Avg accuracy</div><div class="v" id="hAcc">—</div></div>
+      </div>
+      <div class="chartbox">
+        <div class="ch"><span class="name">Speed · seconds per question</span><span class="now" id="spNow"></span></div>
+        <div id="spChart"></div>
+      </div>
+      <div class="chartbox">
+        <div class="ch"><span class="name">Accuracy · first‑try correct</span><span class="now" id="acNow"></span></div>
+        <div id="acChart"></div>
+      </div>
+      <p class="label" style="margin-top:6px;">Recent rounds</p>
+      <div class="recent" id="recent"></div>
+      <button class="clear" id="clearBtn">Clear history</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var ops={add:"+",sub:"−",mul:"×",div:"÷"};
+  var S={ops:["add"],a:2,b:2,n:20,t:180};
+  var $=function(id){return document.getElementById(id);};
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+  function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+  function fmt(s){s=Math.floor(s);return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2);}
+
+  /* theme */
+  var th=store("qm_theme")||"dark";
+  document.body.setAttribute("data-theme",th);$("theme").textContent=th==="dark"?"☾":"☀";
+  $("theme").onclick=function(){var t=document.body.getAttribute("data-theme")==="dark"?"light":"dark";
+    document.body.setAttribute("data-theme",t);store("qm_theme",t);this.textContent=t==="dark"?"☾":"☀";
+    if($("history").classList.contains("on"))renderHistory();};
+
+  /* nav */
+  document.querySelectorAll("#nav button").forEach(function(b){
+    b.onclick=function(){var go=b.dataset.go;if(go==="history")renderHistory();show(go);};
+  });
+  function setNav(id){document.querySelectorAll("#nav button").forEach(function(b){
+    b.classList.toggle("on",b.dataset.go===id||(id==="result"&&b.dataset.go==="setup"));});}
+
+  /* operations */
+  document.querySelectorAll("#ops .op").forEach(function(b){
+    b.onclick=function(){var sel=document.querySelectorAll("#ops .op.sel");
+      if(b.classList.contains("sel")&&sel.length===1)return;
+      b.classList.toggle("sel");validate();};
+  });
+  /* digit selectors (per operand, fixed size) */
+  function bindSeg(wrap){wrap.querySelectorAll(".pill").forEach(function(p){
+    p.onclick=function(){wrap.querySelectorAll(".pill").forEach(function(x){x.classList.remove("sel");});
+      p.classList.add("sel");validate();};});}
+  bindSeg($("segA"));bindSeg($("segB"));
+  $("numQ").oninput=validate;$("numT").oninput=validate;
+  function validate(){
+    var n=parseInt($("numQ").value,10),t=parseFloat($("numT").value),msg="";
+    if(!(n>=1))msg="Enter at least 1 question";
+    else if(!(t>=0.5))msg="Target time must be at least 0.5 min";
+    $("hint").textContent=msg;$("startBtn").disabled=!!msg;
+  }
+
+  /* number generation — each operand strictly the selected digit size */
+  function randN(d){if(d===1)return rnd(2,9);var lo=Math.pow(10,d-1),hi=Math.pow(10,d)-1;return rnd(lo,hi);}
+  function makeQ(){
+    var op=S.ops[rnd(0,S.ops.length-1)],x,y,ans,disp;
+    if(op==="add"){x=randN(S.a);y=randN(S.b);ans=x+y;disp=x+sep("+")+y;}
+    else if(op==="sub"){x=randN(S.a);y=randN(S.b);var hi=Math.max(x,y),lo=Math.min(x,y);ans=hi-lo;disp=hi+sep("−")+lo;}
+    else if(op==="mul"){x=randN(S.a);y=randN(S.b);ans=x*y;disp=x+sep("×")+y;}
+    else{var q=randN(S.a),dv=randN(S.b);ans=q;disp=(q*dv)+sep("÷")+dv;}
+    return {disp:disp,ans:ans,len:String(ans).length};
+  }
+  function sep(s){return ' <i>'+s+'</i> ';}
+
+  /* round state */
+  var idx,startT,timerId,cur,missed,qDirty;
+  function startRound(){
+    S.ops=[];document.querySelectorAll("#ops .op.sel").forEach(function(b){S.ops.push(b.dataset.op);});
+    S.a=+$("segA").querySelector(".sel").dataset.d;
+    S.b=+$("segB").querySelector(".sel").dataset.d;
+    S.n=parseInt($("numQ").value,10);S.t=Math.round(parseFloat($("numT").value)*60);
+    store("qm_cfg",JSON.stringify(S));
+    idx=0;missed=0;
+    $("qTot").textContent=S.n;
+    $("targetLbl").textContent="target "+fmt(S.t)+" · "+(S.t/S.n).toFixed(1)+"s/q";
+    show("game");startT=performance.now();next();tick();timerId=setInterval(tick,200);
+  }
+  function next(){
+    cur=makeQ();qDirty=false;
+    $("q").innerHTML=cur.disp;
+    var inp=$("ans");inp.value="";inp.classList.remove("good");
+    $("qNow").textContent=Math.min(idx+1,S.n);inp.focus();
+  }
+  function tick(){
+    var el=(performance.now()-startT)/1000;$("clock").textContent=fmt(el);
+    $("qFill").style.width=(idx/S.n*100)+"%";
+    $("tFill").style.width=(Math.min(el/S.t,1)*100)+"%";
+    var lbl=$("paceLbl"),fill=$("tFill");
+    if(idx===0){lbl.textContent="Go";lbl.style.color="var(--muted)";fill.style.background="var(--text)";return;}
+    var ratio=(el/S.t)/(idx/S.n);
+    if(ratio<=0.92){lbl.textContent="Ahead of target";lbl.style.color="var(--ok)";fill.style.background="var(--ok)";}
+    else if(ratio<=1.08){lbl.textContent="On pace";lbl.style.color="var(--accent)";fill.style.background="var(--accent)";}
+    else{lbl.textContent="Behind target";lbl.style.color="var(--bad)";fill.style.background="var(--bad)";}
+  }
+  $("ans").addEventListener("input",function(){
+    var v=this.value.trim();if(v===""||v==="-")return;
+    var num=parseInt(v,10);
+    if(num===cur.ans){this.classList.add("good");idx++;if(idx>=S.n){finish();return;}setTimeout(next,90);return;}
+    if(v.replace(/\D/g,"").length>=cur.len&&!qDirty){
+      qDirty=true;missed++;var self=this;this.classList.add("shake");
+      setTimeout(function(){self.classList.remove("shake");},260);
+    }
+  });
+  function finish(){
+    clearInterval(timerId);
+    var el=(performance.now()-startT)/1000,avg=el/S.n;
+    var acc=Math.round((S.n-missed)/S.n*100);
+    show("result");
+    $("rTime").textContent=fmt(el);
+    $("rCap").textContent=S.n+" questions · "+S.ops.map(function(o){return ops[o];}).join(" ")+" · "+S.a+"×"+S.b+" digit";
+    $("rAvg").textContent=avg.toFixed(1)+"s";
+    $("rAcc").textContent=acc+"%";
+    var delta=el-S.t;
+    $("rDelta").textContent=(delta<=0?"−":"+")+fmt(Math.abs(delta));
+    $("rDelta").style.color=delta<=0?"var(--ok)":"var(--bad)";
+    var tag=$("rTag");
+    if(delta<=0){tag.textContent="Target beaten by "+fmt(Math.abs(delta));tag.style.background="rgba(52,211,153,.15)";tag.style.color="var(--ok)";}
+    else{tag.textContent="Over target by "+fmt(delta);tag.style.background="rgba(251,111,111,.15)";tag.style.color="var(--bad)";}
+    var sig="qm_best_"+S.ops.slice().sort().join("")+"_"+S.a+S.b;
+    var prev=parseFloat(store(sig));
+    if(!prev||avg<prev){store(sig,avg.toFixed(2));$("rBest").innerHTML="<b>New best</b> for this setup · "+avg.toFixed(1)+"s/q";}
+    else{$("rBest").innerHTML="Best for this setup: <b>"+prev.toFixed(1)+"s/q</b>";}
+    saveHistory({t:Date.now(),ops:S.ops.slice(),a:S.a,b:S.b,n:S.n,target:S.t,actual:el,avg:avg,acc:acc});
+  }
+
+  /* history storage */
+  function getHistory(){try{return JSON.parse(store("qm_history"))||[];}catch(e){return [];}}
+  function saveHistory(rec){var h=getHistory();h.push(rec);if(h.length>120)h=h.slice(h.length-120);store("qm_history",JSON.stringify(h));}
+
+  function spark(values,opts){
+    var W=320,H=110,pl=30,pr=10,pt=12,pb=22,n=values.length;
+    if(n===0)return "";
+    var min=Math.min.apply(null,values),max=Math.max.apply(null,values);
+    if(min===max){min=min-1;max=max+1;}
+    var pw=W-pl-pr,ph=H-pt-pb;
+    var X=function(i){return n===1?pl+pw/2:pl+i*pw/(n-1);};
+    var Y=function(v){return pt+(1-(v-min)/(max-min))*ph;};
+    var d="",dots="";
+    for(var i=0;i<n;i++){d+=(i===0?"M":"L")+X(i).toFixed(1)+" "+Y(values[i]).toFixed(1)+" ";}
+    var last=n-1;
+    dots+='<circle cx="'+X(last).toFixed(1)+'" cy="'+Y(values[last]).toFixed(1)+'" r="3.5" fill="'+opts.color+'"/>';
+    var area=d+"L"+X(last).toFixed(1)+" "+(pt+ph)+" L"+X(0).toFixed(1)+" "+(pt+ph)+" Z";
+    var lblMax=opts.fmt(max),lblMin=opts.fmt(min);
+    return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img">'
+      +'<line x1="'+pl+'" y1="'+pt+'" x2="'+pl+'" y2="'+(pt+ph)+'" stroke="var(--line)"/>'
+      +'<line x1="'+pl+'" y1="'+(pt+ph)+'" x2="'+(W-pr)+'" y2="'+(pt+ph)+'" stroke="var(--line)"/>'
+      +'<text x="'+(pl-5)+'" y="'+(pt+4)+'" text-anchor="end" font-size="10" fill="var(--faint)" font-family="var(--mono)">'+lblMax+'</text>'
+      +'<text x="'+(pl-5)+'" y="'+(pt+ph)+'" text-anchor="end" font-size="10" fill="var(--faint)" font-family="var(--mono)">'+lblMin+'</text>'
+      +'<path d="'+area+'" fill="'+opts.color+'" opacity="0.10"/>'
+      +'<path d="'+d+'" fill="none" stroke="'+opts.color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+      +dots+'</svg>';
+  }
+
+  function renderHistory(){
+    var h=getHistory();
+    if(h.length===0){$("histEmpty").style.display="block";$("histBody").style.display="none";return;}
+    $("histEmpty").style.display="none";$("histBody").style.display="block";
+    var totalQ=0,bestAvg=Infinity,accSum=0;
+    h.forEach(function(r){totalQ+=r.n;if(r.avg<bestAvg)bestAvg=r.avg;accSum+=r.acc;});
+    $("hRounds").textContent=h.length;
+    $("hQ").textContent=totalQ;
+    $("hBest").textContent=bestAvg.toFixed(1)+"s";
+    $("hAcc").textContent=Math.round(accSum/h.length)+"%";
+    var recent=h.slice(Math.max(0,h.length-20));
+    var speeds=recent.map(function(r){return +r.avg.toFixed(2);});
+    var accs=recent.map(function(r){return r.acc;});
+    $("spChart").innerHTML=spark(speeds,{color:"var(--accent)",fmt:function(v){return v.toFixed(1)+"s";}});
+    $("acChart").innerHTML=spark(accs,{color:"var(--ok)",fmt:function(v){return Math.round(v)+"%";}});
+    $("spNow").textContent="now "+speeds[speeds.length-1].toFixed(1)+"s";
+    $("acNow").textContent="now "+accs[accs.length-1]+"%";
+    var rows="";
+    h.slice().reverse().slice(0,8).forEach(function(r){
+      var dt=new Date(r.t);
+      var ds=dt.toLocaleDateString(undefined,{day:"numeric",month:"short"})+", "+dt.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+      rows+='<div class="row"><div class="l"><div class="t">'+r.ops.map(function(o){return ops[o];}).join(" ")+' · '+r.a+'×'+r.b+'</div>'
+        +'<div class="d">'+r.n+' q · '+ds+'</div></div>'
+        +'<div class="r"><div class="sp">'+r.avg.toFixed(1)+'s/q</div><div class="ac">'+r.acc+'% · '+fmt(r.actual)+'</div></div></div>';
+    });
+    $("recent").innerHTML=rows;
+  }
+  $("clearBtn").onclick=function(){
+    if(confirm("Clear all saved rounds? This can't be undone.")){store("qm_history","[]");renderHistory();}
+  };
+
+  function show(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("on");});
+    $(id).classList.add("on");
+    var fs=(id==="game");$("hdr").style.display=fs?"none":"flex";setNav(id);}
+
+  $("startBtn").onclick=startRound;
+  $("againBtn").onclick=startRound;
+  $("editBtn").onclick=function(){show("setup");};
+  $("quit").onclick=function(){clearInterval(timerId);show("setup");};
+
+  /* restore config */
+  try{var c=JSON.parse(store("qm_cfg"));if(c){
+    document.querySelectorAll("#ops .op").forEach(function(b){b.classList.toggle("sel",c.ops.indexOf(b.dataset.op)>=0);});
+    $("segA").querySelectorAll(".pill").forEach(function(p){p.classList.toggle("sel",+p.dataset.d===c.a);});
+    $("segB").querySelectorAll(".pill").forEach(function(p){p.classList.toggle("sel",+p.dataset.d===c.b);});
+    $("numQ").value=c.n;$("numT").value=(c.t/60);
+  }}catch(e){}
+  validate();
+
+  if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
